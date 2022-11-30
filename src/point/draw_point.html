@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>绘制点</title>
+    <script src="./gl-matrix.js"></script>
+    <script>
+        function init() {
+            initWebgl();
+            initShader();
+            initBuffer();
+            draw();
+        }
+        let webgel;
+        let projMat4 = glMatrix.mat4.create();
+        let webglDiv;
+        let vertexString = `
+            attribute vec4 a_position;
+            uniform mat4 proj;
+            void main() {
+                gl_Position = proj * a_position;
+                gl_PointSize = 10.0;
+            }
+        `;
+        let fragmentString = `
+            void main() {
+                gl_FragColor = vec4(0, 0, 1.0, 1.0);
+            }
+        `;
+        function initWebgl() {
+            webglDiv = document.querySelector('#canvas');
+            webgl = webglDiv.getContext('webgl');
+            webgl.viewport(0, 0, webglDiv.clientWidth, webglDiv.clientHeight);
+            glMatrix.mat4.ortho(projMat4, 0, webglDiv.clientWidth, webglDiv.clientHeight, 0, -1, 1);
+        }
+        function initShader() {
+            let vsShader = webgl.createShader(webgl.VERTEX_SHADER);
+            let fsShader = webgl.createShader(webgl.FRAGMENT_SHADER);
+
+            webgl.shaderSource(vsShader, vertexString);
+            webgl.shaderSource(fsShader, fragmentString);
+
+            // 编译shader
+            webgl.compileShader(vsShader);
+            webgl.compileShader(fsShader);
+
+            // 绑定shader
+            let program = webgl.createProgram();
+            webgl.attachShader(program, vsShader);
+            webgl.attachShader(program, fsShader);
+
+            webgl.linkProgram(program);
+            webgl.useProgram(program);
+
+            webgl.program = program;
+        }
+        // 创建数据并赋值给shader
+        function initBuffer() {
+            // let pointPosition = new Float32Array([100.0, 100.0, 0.0, 1.0]);
+            let aPosition = webgl.getAttribLocation(webgl.program, 'a_position');
+            // webgl.vertexAttrib4fv(aPosition, pointPosition);
+
+            document.addEventListener('mouseup', (e) => {
+                let x = e.clientX;
+                let y = e.clientY;
+                let rect = e.target.getBoundingClientRect();
+                let left = rect.left;
+                let top = rect.top;
+                let px = ((x - left) - webglDiv.clientWidth / 2) / webglDiv.clientWidth;
+                let py = -((y - top) - webgelDiv.clientHeight / 2) / webglDiv.clientHeight;
+                
+            });
+
+            let uniforproj = webgl.getUniformLocation(webgl.program, 'proj');
+            webgl.uniformMatrix4fv(uniforproj, false, projMat4);
+        }
+        function draw() {
+            webgl.clearColor(0.0, 0.0, 0.0, 1.0);
+            webgl.clear(webgl.COLOR_BUFFER_BIT);
+            webgl.drawArrays(webgl.POINTS, 0, 1);
+        }
+    </script>
+</head>
+
+<body onload="init()">
+    <canvas id="canvas" width="500" height="500" />
+</body>
+
+</html>
