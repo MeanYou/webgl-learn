@@ -1,18 +1,29 @@
-// 画点
+// 基础示例
 import React, { useEffect } from 'react';
 import { mat4 } from 'gl-matrix';
 
 const Example1 = () => {
     useEffect(() => {
         const vertexString = `
-            attribute vec4 a_position;
+            attribute vec2 a_position;
+            uniform vec2 u_resolution;
             void main() {
-                gl_Position = a_position;
+                vec2 zeroToOne = a_position / u_resolution;
+
+                vec2 zeroToTwo = zeroToOne * 2.0;
+
+                vec2 clipSpace = zeroToTwo - 1.0;
+
+                gl_Position = vec4(clipSpace * vec2(1, -1), 0, 1);
             }
         `;
         const fragmentString = `
+            precision mediump float;
+
+            uniform vec4 u_color;
+
             void main() {
-                gl_FragColor = vec4(1, 0, 0.5, 1);
+                gl_FragColor = u_color;
             }
         `;
         const canvas = document.querySelector('#canvas') as HTMLCanvasElement;
@@ -51,14 +62,19 @@ const Example1 = () => {
         const positionAttributeLocation = gl.getAttribLocation(program, 'a_position');
         const positionBuffer = gl.createBuffer();
 
+        const resolutionUniformLocation = gl.getUniformLocation(program, 'u_resolution');
+
         gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
 
-        const positions = [
-            0, 0,
-            0, 0.5,
-            0.7, 0,
-        ];
-        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
+        // const positions = [
+        //     10, 20,
+        //     80, 20,
+        //     10, 30,
+        //     10, 30,
+        //     80, 20,
+        //     80, 30
+        // ];
+        // gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
 
         gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
@@ -66,6 +82,10 @@ const Example1 = () => {
         gl.clear(gl.COLOR_BUFFER_BIT);
 
         gl.useProgram(program);
+
+        gl.uniform2f(resolutionUniformLocation, gl.canvas.width, gl.canvas.height);
+
+        const colorUniformLocation = gl.getUniformLocation(program, 'u_color');
 
         gl.enableVertexAttribArray(positionAttributeLocation);
 
@@ -76,9 +96,36 @@ const Example1 = () => {
         const offset = 0;
         gl.vertexAttribPointer(positionAttributeLocation, size, type, normalize, stride, offset);
 
-        gl.drawArrays(gl.TRIANGLES, 0, 3);
+        const setRectangle = (gl: WebGLRenderingContext, x: number, y: number, width: number, height: number) => {
+            const x1 = x;
+            const x2 = x + width;
+            const y1 = y;
+            const y2 = y + height;
+
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+                x1, y1,
+                x2, y1,
+                x1, y2,
+                x1, y2,
+                x2, y1,
+                x2, y2
+            ]), gl.STATIC_DRAW);
+        };
+        const randomInt = (range: number) => {
+            return Math.floor(Math.random() * range);
+        };
+
+        for (let i = 0; i < 50; i++) {
+            setRectangle(
+                gl, randomInt(300), randomInt(300), randomInt(300), randomInt(300)
+            );
+
+            gl.uniform4f(colorUniformLocation, Math.random(), Math.random(), Math.random(), 1);
+
+            gl.drawArrays(gl.TRIANGLES, 0, 6);
+        }
     }, []);
-    return <canvas id="canvas" width="400" height="300" />;
+    return <canvas id="canvas" width="800" height="600" />;
 };
 
 export default Example1;
