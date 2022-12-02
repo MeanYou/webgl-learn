@@ -251,7 +251,7 @@ module.exports = {
         }
     },
     externals: {
-        fullpage: 'fullpage',
+        webglLessonsUI: 'webglLessonsUI',
         echarts: 'echarts'
     }
 };

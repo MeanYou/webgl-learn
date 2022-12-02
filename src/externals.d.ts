@@ -1,4 +1,4 @@
-declare module 'fullpage' {
-    const fullpage: any;
-    export default fullpage;
+declare module 'webglLessonsUI' {
+    const webglLessonsUI: any;
+    export default webglLessonsUI;
 }
